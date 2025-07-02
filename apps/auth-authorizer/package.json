@@ -1,0 +1,17 @@
+{
+  "name": "@lumiere/auth-authorizer",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "build": "tsc -p tsconfig.json && cp package.json ./dist",
+    "postbuild": "cd ./dist && npm install --omit=dev && npm run package",
+    "package": "zip -r ./auth-authorizer.zip ."
+  },
+  "dependencies": {
+    "aws-lambda": "^1.0.7",
+    "axios": "^1.10.0",
+    "bs-logger": "^0.2.6",
+    "qs": "^6.14.0"
+  }
+}

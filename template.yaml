@@ -1,0 +1,37 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+  SignInFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      Architectures:
+        - x86_64
+      Events:
+        SignInAPI:
+          Type: Api
+          Properties:
+            Path: /sign-in
+            Method: post
+    Metadata:
+      DockerTag: nodejs20.x-v1
+      DockerContext: .
+      Dockerfile: apps/sign-in/Dockerfile
+
+  SignUpFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      Architectures:
+        - x86_64
+      Events:
+        SignUpAPI:
+          Type: Api
+          Properties:
+            Path: /sign-up
+            Method: post
+    Metadata:
+      DockerTag: nodejs20.x-v1
+      DockerContext: .
+      Dockerfile: apps/sign-up/Dockerfile

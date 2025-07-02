@@ -1,0 +1,100 @@
+name: Build and Deploy lumiere Lambdas
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        lambdaFunction: [ sign-in, sign-up ]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build lambdas
+        run: |
+          npm install && npm run build
+
+      - name: Run unit tests
+        run: |
+          npm run test --workspace=@lumiere/${{ matrix.lambdaFunction }} -- --passWithNoTests --runInBand=false --maxWorkers=50%
+
+  package:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    strategy:
+      matrix:
+        lambdaFunction: [ sign-in, sign-up ]
+
+    env:
+      LAMBDA_NAME: ${{ matrix.lambdaFunction }}
+      DIST_PATH: ./apps/${{ matrix.lambdaFunction }}/dist
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build lambdas
+        run: |
+          npm install && npm run build && rm -rf node_modules
+
+      - name: Package Lambda
+        run: |
+          mkdir -p resolved_modules
+          npm install --workspace=@lumiere/$LAMBDA_NAME
+          cp -rL node_modules/. ./resolved_modules/
+          cp -r resolved_modules $DIST_PATH/node_modules
+          cd $DIST_PATH && zip -r ../../../$LAMBDA_NAME.zip .
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.lambdaFunction }}-artifact
+          path: ./${{ matrix.lambdaFunction }}.zip
+
+  deploy:
+    needs: package
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    strategy:
+      matrix:
+        lambdaFunction: [ sign-in, sign-up ]
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.lambdaFunction }}-artifact
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Update Lambda
+        run: |
+          aws lambda update-function-code \
+          --function-name lumiere-${{ matrix.lambdaFunction }} \
+          --zip-file fileb://${{ matrix.lambdaFunction }}.zip
