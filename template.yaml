@@ -1,23 +1,34 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
+Description: >
+  lambda-layers-with-sam
+Globals:
+  Function:
+    Environment:
+      Variables:
+        AUTH_CLIENT_ID: !Ref AUTH_CLIENT_ID
+        AUTH_CLIENT_SECRET: !Ref AUTH_CLIENT_SECRET
+        NODE_ENV: dev
+        LOG_LEVEL: debug
+    Timeout: 30
+    LoggingConfig:
+      LogFormat: JSON
+      LogLevel: INFO
+      ApplicationLogLevel: DEBUG
 
 Resources:
-  SignInFunction:
-    Type: AWS::Serverless::Function
+  ApiGateway:
+    Type: AWS::Serverless::Api
     Properties:
-      PackageType: Image
-      Architectures:
-        - x86_64
-      Events:
-        SignInAPI:
-          Type: Api
-          Properties:
-            Path: /sign-in
-            Method: post
-    Metadata:
-      DockerTag: nodejs20.x-v1
-      DockerContext: .
-      Dockerfile: apps/sign-in/Dockerfile
+      StageName: dev
+      Auth:
+        Authorizers:
+          UserAuthorizer:
+            FunctionPayloadType: REQUEST
+            FunctionArn: !GetAtt AuthorizerFunction.Arn
+            Identity:
+              Headers:
+                - Cookie
 
   SignUpFunction:
     Type: AWS::Serverless::Function
@@ -26,12 +37,95 @@ Resources:
       Architectures:
         - x86_64
       Events:
-        SignUpAPI:
+        SignUpEndPoint:
           Type: Api
           Properties:
-            Path: /sign-up
+            Path: /auth/sign-up/{action}
             Method: post
     Metadata:
-      DockerTag: nodejs20.x-v1
+      DockerTag: latest
       DockerContext: .
-      Dockerfile: apps/sign-up/Dockerfile
+      Dockerfile: auth/signUp/Dockerfile
+
+  SignInFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      Architectures:
+        - x86_64
+      Events:
+        SignInEndPoint:
+          Type: Api
+          Properties:
+            Path: /auth/sign-in
+            Method: post
+    Metadata:
+      DockerTag: latest
+      DockerContext: .
+      Dockerfile: auth/signIn/Dockerfile
+
+  SignOutFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      Architectures:
+        - x86_64
+      Events:
+        SignOutEndPoint:
+          Type: Api
+          Properties:
+            Path: /auth/sign-out
+            Method: post
+    Metadata:
+      DockerTag: latest
+      DockerContext: .
+      Dockerfile: auth/signOut/Dockerfile
+
+  UserData:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      Architectures:
+        - x86_64
+      Events:
+        FrontendAuthorizerEndpoint:
+          Type: Api
+          Properties:
+            Path: /auth/client-authorizer
+            Method: post
+    Metadata:
+      DockerTag: latest
+      DockerContext: .
+      Dockerfile: auth/userData/Dockerfile
+
+  AuthorizerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      Architectures:
+        - x86_64
+    Metadata:
+      DockerTag: latest
+      DockerContext: .
+      Dockerfile: apps/authorizer/Dockerfile
+
+  # The functions below are protected
+  UserRecordsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      Architectures:
+        - x86_64
+      Events:
+        UserRecordsEndPoint:
+          Type: Api
+          Properties:
+            Path: /user-records
+            Method: get
+            RestApiId: !Ref ApiGateway
+            Auth:
+              Authorizer: Authorizer
+    Metadata:
+      DockerTag: latest
+      DockerContext: .
+      Dockerfile: api/userRecords/Dockerfile

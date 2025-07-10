@@ -1,0 +1,21 @@
+{
+  "name": "@lumiere/storage-url",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "prebuild": "rm -rf dist",
+    "build": "tsc -p tsconfig.json",
+    "postbuild": "cp package.json ./dist/",
+    "prepackage": "npm install --omit=dev && cp -rL ../../node_modules/. ./dist/node_modules",
+    "package": "cd ./dist && zip -q -r ../../../infra/artifacts/storageUrl.zip .",
+    "postpackage": "rm -rf ../../node_modules"
+  },
+  "dependencies": {
+    "@lumiere/shared": "^1.0.0",
+    "aws-lambda": "^1.0.7",
+    "bs-logger": "^0.2.6"
+  }
+}
+
+

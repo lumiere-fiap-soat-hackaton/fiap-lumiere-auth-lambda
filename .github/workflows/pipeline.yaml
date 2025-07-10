@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        lambdaFunction: [ sign-in, sign-up ]
+        lambdaFunctions: [ sign-in, sign-up, sign-out, user-data, authorizer, user-records, storage-url ]
 
     steps:
       - name: Checkout code
@@ -32,19 +32,30 @@ jobs:
         run: |
           npm run test --workspace=@lumiere/${{ matrix.lambdaFunction }} -- --passWithNoTests --runInBand=false --maxWorkers=50%
 
+      - name: Share artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.lambdaFunction }}-build-artifact
+          path: ./build/${{ matrix.lambdaFunction }}
+
   package:
     needs: build
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     strategy:
       matrix:
-        lambdaFunction: [ sign-in, sign-up ]
+        lambdaFunctions: [ sign-in, sign-up, sign-out, user-data, authorizer, user-records, storage-url ]
 
     env:
       LAMBDA_NAME: ${{ matrix.lambdaFunction }}
-      DIST_PATH: ./apps/${{ matrix.lambdaFunction }}/dist
+      DIST_PATH: ./build/${{ matrix.lambdaFunction }}/dist
 
     steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.lambdaFunction }}-package-artifact
+
       - name: Checkout code
         uses: actions/checkout@v3
 
@@ -60,7 +71,7 @@ jobs:
       - name: Package Lambda
         run: |
           mkdir -p resolved_modules
-          npm install --workspace=@lumiere/$LAMBDA_NAME
+          npm install --workspace=@lumiere/$LAMBDA_NAME --omit=dev
           cp -rL node_modules/. ./resolved_modules/
           cp -r resolved_modules $DIST_PATH/node_modules
           cd $DIST_PATH && zip -r ../../../$LAMBDA_NAME.zip .
@@ -68,7 +79,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.lambdaFunction }}-artifact
+          name: ${{ matrix.lambdaFunction }}-package-artifact
           path: ./${{ matrix.lambdaFunction }}.zip
 
   deploy:
@@ -77,13 +88,13 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     strategy:
       matrix:
-        lambdaFunction: [ sign-in, sign-up ]
+        authFunctions: [ sign-in, sign-up, sign-out, user-data, authorizer]
 
     steps:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: ${{ matrix.lambdaFunction }}-artifact
+          name: ${{ matrix.lambdaFunction }}-package-artifact
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4

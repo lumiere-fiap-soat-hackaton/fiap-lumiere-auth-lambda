@@ -122,6 +122,7 @@ $RECYCLE.BIN/
 
 **/.aws-sam
 .aws-sam/
+env.json
 
 ### MISC
 .temp
