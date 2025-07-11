@@ -13,7 +13,7 @@
     "lint": "eslint . --fix",
     "format": "prettier --write .",
     "fix": "npm run lint && npm run format",
-    "test": "npm run test --workspaces",
+    "test": "npx jest",
     "build": "npm run build --workspaces",
     "postbuild": "rm -rf node_modules",
     "package": "npm run package --workspaces --if-present",
