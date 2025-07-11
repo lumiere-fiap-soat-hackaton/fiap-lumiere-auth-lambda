@@ -2,38 +2,38 @@ name: Build and Deploy lumiere Lambdas
 
 on:
   pull_request:
-    branches:
-      - main
+    branches: [main]
   push:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        lambdaFunctions: [ sign-in, sign-up, sign-out, user-data, authorizer, user-records, storage-url ]
+        lambdaFunction: [sign-in, sign-up, sign-out, user-data, authorizer, user-records, storage-url]
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - name: Build lambdas
-        run: |
-          npm install && npm run build
+      - name: Cache node modules
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
 
-      - name: Run unit tests
-        run: |
-          npm run test --workspace=@lumiere/${{ matrix.lambdaFunction }} -- --passWithNoTests --runInBand=false --maxWorkers=50%
+      - run: npm ci
+      - run: npm run build
 
-      - name: Share artifacts
-        uses: actions/upload-artifact@v4
+      - run: npm run test --workspace=@lumiere/${{ matrix.lambdaFunction }} -- --passWithNoTests
+
+      - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.lambdaFunction }}-build-artifact
           path: ./build/${{ matrix.lambdaFunction }}
@@ -44,40 +44,20 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     strategy:
       matrix:
-        lambdaFunctions: [ sign-in, sign-up, sign-out, user-data, authorizer, user-records, storage-url ]
-
-    env:
-      LAMBDA_NAME: ${{ matrix.lambdaFunction }}
-      DIST_PATH: ./build/${{ matrix.lambdaFunction }}/dist
+        lambdaFunction: [sign-in, sign-up, sign-out, user-data, authorizer, user-records, storage-url]
 
     steps:
-      - name: Download artifact
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
-          name: ${{ matrix.lambdaFunction }}-package-artifact
-
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Build lambdas
-        run: |
-          npm install && npm run build && rm -rf node_modules
+          name: ${{ matrix.lambdaFunction }}-build-artifact
 
       - name: Package Lambda
         run: |
-          mkdir -p resolved_modules
-          npm install --workspace=@lumiere/$LAMBDA_NAME --omit=dev
-          cp -rL node_modules/. ./resolved_modules/
-          cp -r resolved_modules $DIST_PATH/node_modules
-          cd $DIST_PATH && zip -r ../../../$LAMBDA_NAME.zip .
+          cd ./build/${{ matrix.lambdaFunction }}/dist
+          npm install --omit=dev --production
+          zip -r ../../../${{ matrix.lambdaFunction }}.zip .
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.lambdaFunction }}-package-artifact
           path: ./${{ matrix.lambdaFunction }}.zip
@@ -88,24 +68,21 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     strategy:
       matrix:
-        authFunctions: [ sign-in, sign-up, sign-out, user-data, authorizer]
+        lambdaFunction: [sign-in, sign-up, sign-out, user-data, authorizer]
 
     steps:
-      - name: Download artifact
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
-          name: ${{ matrix.authFunctions }}-package-artifact
+          name: ${{ matrix.lambdaFunction }}-package-artifact
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+      - uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Update Lambda
-        run: |
+      - run: |
           aws lambda update-function-code \
-          --function-name lumiere-${{ matrix.authFunctions }} \
-          --zip-file fileb://${{ matrix.authFunctions }}.zip
+            --function-name lumiere-${{ matrix.lambdaFunction }} \
+            --zip-file fileb://${{ matrix.lambdaFunction }}.zip
