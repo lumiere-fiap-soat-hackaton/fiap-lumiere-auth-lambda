@@ -31,7 +31,7 @@ jobs:
       - run: npm ci
       - run: npm run build
 
-      - run: npm run test --workspace=@lumiere/${{ matrix.lambdaFunction }} -- --passWithNoTests
+      - run: npm run test --workspace=@lumiere/${{ matrix.lambdaFunction }}
 
       - uses: actions/upload-artifact@v4
         with:
