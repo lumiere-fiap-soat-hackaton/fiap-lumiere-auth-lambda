@@ -94,7 +94,7 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: ${{ matrix.lambdaFunction }}-package-artifact
+          name: ${{ matrix.authFunctions }}-package-artifact
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -107,5 +107,5 @@ jobs:
       - name: Update Lambda
         run: |
           aws lambda update-function-code \
-          --function-name lumiere-${{ matrix.lambdaFunction }} \
-          --zip-file fileb://${{ matrix.lambdaFunction }}.zip
+          --function-name lumiere-${{ matrix.authFunctions }} \
+          --zip-file fileb://${{ matrix.authFunctions }}.zip
