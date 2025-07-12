@@ -88,7 +88,8 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     strategy:
       matrix:
-        lambdaFunction: [sign-in, sign-up, sign-out, authorizer]
+        lambdaFunction: [sign-in, sign-up, sign-out, user-data, authorizer, user-records, storage-url]
+
 
     steps:
       - uses: actions/download-artifact@v4
