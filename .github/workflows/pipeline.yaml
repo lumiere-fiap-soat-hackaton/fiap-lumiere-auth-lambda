@@ -64,21 +64,16 @@ jobs:
           echo "Conteúdo atual do workspace após download:"
           find .
 
-      - name: List downloaded artifact
-        run: |
-          echo "Listing downloaded files:"
-          find . -type d
-
       - name: Check if dist directory exists
         run: |
-          if [ ! -d "./${{ matrix.lambdaFunction }}/dist" ]; then
-            echo "❌ Directory ./${{ matrix.lambdaFunction }}/dist does not exist! Likely build artifact is incomplete."
+          if [ ! -d "./build/${{ matrix.lambdaFunction }}/dist" ]; then
+            echo "❌ Directory ./build/${{ matrix.lambdaFunction }}/dist does not exist! Likely build artifact is incomplete."
             exit 1
           fi
 
       - name: Package Lambda
         run: |
-          cd ./${{ matrix.lambdaFunction }}/dist
+          cd ./build/${{ matrix.lambdaFunction }}/dist
           npm install --omit=dev --production
           zip -r ../../../../${{ matrix.lambdaFunction }}.zip .
 
@@ -86,6 +81,7 @@ jobs:
         with:
           name: ${{ matrix.lambdaFunction }}-package-artifact
           path: ./${{ matrix.lambdaFunction }}.zip
+
   deploy:
     needs: package
     runs-on: ubuntu-latest
