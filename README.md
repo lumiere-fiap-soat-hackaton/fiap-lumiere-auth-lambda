@@ -1,5 +1,4 @@
-[![Build and Deploy lumiere Lambdas](https://github.com/lumiere-fiap-soat-hackaton/fiap-lumiere-auth-lambda/actions/workflows/pipeline.yaml/badge.svg)]
-(https://github.com/lidia-freitas/lumiere-auth/actions/workflows/pipeline.yaml)
+
 
 # lumiere Auth
 
