@@ -1,8 +1,8 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist",
-    "rootDir": "src"
+  "outDir": "../../build/sign-in/dist",
+  "rootDir": "src"
   },
   "include": [
     "src"

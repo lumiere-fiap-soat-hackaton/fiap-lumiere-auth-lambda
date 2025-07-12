@@ -4,11 +4,11 @@
   "main": "index.js",
   "scripts": {
     "test": "npx jest --passWithNoTests",
-    "prebuild": "rm -rf dist",
+    "prebuild": "rm -rf ../../build/storage-url/dist",
     "build": "tsc -p tsconfig.json",
-    "postbuild": "cp package.json ./dist/",
-    "prepackage": "npm install --omit=dev && cp -rL ../../node_modules/. ./dist/node_modules",
-    "package": "cd ./dist && zip -q -r ../../../infra/artifacts/storageUrl.zip .",
+    "postbuild": "cp package.json ../../build/storage-url/dist/",
+    "prepackage": "npm install --omit=dev && cp -rL ../../node_modules/. ../../build/storage-url/dist/node_modules",
+    "package": "cd ../../build/storage-url/dist && zip -q -r ../../../../../infra/artifacts/storageUrl.zip .",
     "postpackage": "rm -rf ../../node_modules"
   },
   "dependencies": {
@@ -17,5 +17,3 @@
     "bs-logger": "^0.2.6"
   }
 }
-
-

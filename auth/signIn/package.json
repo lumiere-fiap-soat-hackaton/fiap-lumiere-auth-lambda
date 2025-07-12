@@ -4,11 +4,11 @@
   "main": "index.js",
   "scripts": {
     "test": "npx jest --passWithNoTests",
-    "prebuild": "rm -rf dist",
+    "prebuild": "rm -rf ../../build/sign-in/dist",
     "build": "tsc -p tsconfig.json",
-    "postbuild": "cp package.json ./dist/",
-    "prepackage": "npm install --omit=dev && cp -rL ../../node_modules/. ./dist/node_modules",
-    "package": "cd ./dist && zip -q -r ../../../infra/artifacts/signIn.zip .",
+    "postbuild": "cp package.json ../../build/sign-in/dist/",
+    "prepackage": "npm install --omit=dev && cp -rL ../../node_modules/. ../../build/sign-in/dist/node_modules",
+    "package": "cd ../../build/sign-in/dist && zip -q -r ../../../../../infra/artifacts/signIn.zip .",
     "postpackage": "rm -rf ../../node_modules"
   },
   "dependencies": {

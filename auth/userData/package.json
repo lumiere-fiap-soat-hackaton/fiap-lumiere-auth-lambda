@@ -4,11 +4,11 @@
   "main": "index.js",
   "scripts": {
     "test": "npx jest --passWithNoTests",
-    "prebuild": "rm -rf dist",
+    "prebuild": "rm -rf ../../build/user-data/dist",
     "build": "tsc -p tsconfig.json",
-    "postbuild": "cp package.json ./dist/",
-    "prepackage": "npm install --omit=dev && cp -rL ../../node_modules/. ./dist/node_modules",
-    "package": "cd ./dist && zip -q -r ../../../infra/artifacts/userData.zip .",
+    "postbuild": "cp package.json ../../build/user-data/dist/",
+    "prepackage": "npm install --omit=dev && cp -rL ../../node_modules/. ../../build/user-data/dist/node_modules",
+    "package": "cd ../../build/user-data/dist && zip -q -r ../../../../../infra/artifacts/userData.zip .",
     "postpackage": "rm -rf ../../node_modules"
   },
   "dependencies": {
@@ -17,5 +17,3 @@
     "bs-logger": "^0.2.6"
   }
 }
-
-
