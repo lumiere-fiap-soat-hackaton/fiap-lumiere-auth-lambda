@@ -57,6 +57,12 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: ${{ matrix.lambdaFunction }}-build-artifact
+          path: ./build/${{ matrix.lambdaFunction }}
+
+      - name: List downloaded files
+        run: |
+          echo "Conteúdo atual do workspace após download:"
+          find .
 
       - name: List downloaded artifact
         run: |
@@ -80,7 +86,6 @@ jobs:
         with:
           name: ${{ matrix.lambdaFunction }}-package-artifact
           path: ./${{ matrix.lambdaFunction }}.zip
-
   deploy:
     needs: package
     runs-on: ubuntu-latest
