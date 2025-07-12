@@ -74,7 +74,6 @@ jobs:
       - name: Package Lambda
         run: |
           cd ./build/${{ matrix.lambdaFunction }}/dist
-          npm install --omit=dev --production
           zip -r ../../../../${{ matrix.lambdaFunction }}.zip .
 
       - uses: actions/upload-artifact@v4
