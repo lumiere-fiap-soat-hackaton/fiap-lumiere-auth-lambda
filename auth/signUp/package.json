@@ -4,11 +4,11 @@
   "main": "index.js",
   "scripts": {
     "test": "npx jest --passWithNoTests",
-    "prebuild": "rm -rf dist",
+    "prebuild": "rm -rf ../../build/sign-up/dist",
     "build": "tsc -p tsconfig.json",
-    "postbuild": "cp package.json ./dist/",
-    "prepackage": "npm install --omit=dev && cp -rL ../../node_modules/. ./dist/node_modules",
-    "package": "cd ./dist && zip -q -r ../../../infra/artifacts/signUp.zip .",
+    "postbuild": "cp package.json ../../build/sign-up/dist/",
+    "prepackage": "npm install --omit=dev && cp -rL ../../node_modules/. ../../build/sign-up/dist/node_modules",
+    "package": "cd ../../build/sign-up/dist && zip -q -r ../../../../../infra/artifacts/signUp.zip .",
     "postpackage": "rm -rf ../../node_modules"
   },
   "dependencies": {
