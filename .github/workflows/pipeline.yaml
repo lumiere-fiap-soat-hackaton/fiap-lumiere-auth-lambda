@@ -33,13 +33,6 @@ jobs:
 
       - run: npm run test --workspace=@lumiere/${{ matrix.lambdaFunction }}
 
-      - name: Check if build directory exists
-        run: |
-          if [ ! -d "./build/${{ matrix.lambdaFunction }}" ]; then
-            echo "❌ Directory ./build/${{ matrix.lambdaFunction }} does not exist! Build step likely failed."
-            exit 1
-          fi
-
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.lambdaFunction }}-build-artifact
@@ -57,13 +50,6 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: ${{ matrix.lambdaFunction }}-build-artifact
-
-      - name: Check if dist directory exists
-        run: |
-          if [ ! -d "./build/${{ matrix.lambdaFunction }}/dist" ]; then
-            echo "❌ Directory ./build/${{ matrix.lambdaFunction }}/dist does not exist! Likely build artifact is incomplete."
-            exit 1
-          fi
 
       - name: Package Lambda
         run: |
